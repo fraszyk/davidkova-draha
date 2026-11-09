@@ -53,11 +53,33 @@ html,body{margin:0;height:100%;overflow:hidden;background:#a3d48c;font-family:va
 .big.go.sure{background:#2f7de1;color:#fff}
 .big.ok{background:#ffd23f;color:#5b3a17;margin-left:auto}
 .x{border:none;background:#eee;border-radius:50%;width:44px;height:44px;font-size:22px;cursor:pointer}
+#rodicBtn{position:fixed;left:14px;top:calc(56px + env(safe-area-inset-top));width:44px;height:44px;border-radius:50%;border:none;background:rgba(255,255,255,.85);font-family:var(--emoji);font-size:22px;box-shadow:0 3px 10px rgba(0,0,0,.12);touch-action:none;cursor:pointer;padding:0}
+#rodicBtn.drzim::after{content:"";position:absolute;inset:-7px;border-radius:50%;border:5px solid #2f7de1;clip-path:inset(0 0 0 0);animation:drz 1s linear forwards}
+@keyframes drz{from{opacity:.2;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
+#rodice{position:fixed;inset:0;background:rgba(40,60,30,.55);display:none;align-items:center;justify-content:center;z-index:12;padding:16px}
+#rodice.on{display:flex}
+#rodice,#rbox{touch-action:pan-y}
+#rbox input,#rbox textarea,#rbox a,#rbox button{touch-action:manipulation}
+#rbox{background:#fff8ea;border-radius:28px;padding:18px 22px 20px;max-width:620px;width:100%;max-height:100%;overflow:auto;box-shadow:0 20px 50px rgba(0,0,0,.3);font-family:var(--font);color:#5b3a17}
+#rbox h2{margin:0 0 4px;font-size:26px;font-weight:800;display:flex;justify-content:space-between;align-items:center}
+#rbox h3{margin:10px 0 4px;font-size:19px;font-weight:800}
+#rbox .maly{font-size:15px;color:#7a5a36;margin:2px 0 6px}
+#rbox textarea{width:100%;box-sizing:border-box;font:500 17px var(--font);border:3px solid #c9a46f;border-radius:14px;padding:8px 10px;resize:vertical;user-select:text;-webkit-user-select:text}
+.hl-typy{display:flex;gap:18px;font-weight:700;margin:4px 0 8px}
+.hl-seznam{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.hl-polozka{display:flex;align-items:center;gap:8px;background:#f8e7c6;border-radius:12px;padding:6px 8px}
+.hl-typ{font-family:var(--emoji);font-size:20px}
+.hl-text{flex:1;min-width:0;overflow-wrap:anywhere;font-size:15px}
+.hl-text small{display:block;color:#7a5a36;font-size:12px}
+.mini{border:none;border-radius:10px;background:#ffd23f;color:#5b3a17;font:700 14px var(--font);padding:6px 10px;text-decoration:none;cursor:pointer}
+.mini.x2{background:#eee}
 @media (max-height:600px){:root{--tray:140px}.it{height:88px;width:80px}.it canvas{width:56px;height:56px}.it .em{font-size:40px;line-height:56px;height:56px}.b{width:48px;height:48px;font-size:23px}#title{font-size:18px}}
 </style></head>
 <body>
 <canvas id="cv"></canvas>
 <div id="title">🚂 Davídkova dráha</div>
+<button id="rodicBtn" title="Pro rodiče (podrž)" aria-label="Pro rodiče, podrž jednu vteřinu">⚙️</button>
+<div id="rodice"><div id="rbox"></div></div>
 <div id="btns">
   <button class="b" id="bPlay" title="Zastavit / jet">⏸️</button>
   <button class="b" id="bSpeed" title="Rychlost">🚂</button>
@@ -79,6 +101,10 @@ html,body{margin:0;height:100%;overflow:hidden;background:#a3d48c;font-family:va
 </div></div>
 <script>
 'use strict';
+const VERZE='87d69a46';
+const CHYBY_JS=[];
+addEventListener('error',e=>{CHYBY_JS.push((e.message||'chyba')+' @'+(e.lineno||'?'));if(CHYBY_JS.length>5)CHYBY_JS.shift()});
+addEventListener('unhandledrejection',e=>{CHYBY_JS.push('promise: '+String(e.reason&&e.reason.message||e.reason));if(CHYBY_JS.length>5)CHYBY_JS.shift()});
 // ================= model =================
 const DX=[0,1,0,-1], DY=[-1,0,1,0], BIT=[1,2,4,8];
 const MID=[[.5,0],[1,.5],[.5,1],[0,.5]];
@@ -1075,6 +1101,46 @@ function novySvet(seed,say){
   if(say){setTimeout(()=>rekni(vyber(made?SVET_VES:SVET_LOUKA)),300);toast('Svět č. '+seed+' – táhni prstem a stav 👆')}
   save();
 }
+// ================= pro rodiče: hlášení chyb a nápadů =================
+const REPO='fraszyk/davidkova-draha',HKEY='davidkova-draha-hlaseni';
+let hlaseni=[];try{hlaseni=JSON.parse(localStorage.getItem(HKEY)||'[]')}catch(e){}
+function ulozHl(){try{localStorage.setItem(HKEY,JSON.stringify(hlaseni.slice(-50)))}catch(e){}}
+function kontextHry(){return {verze:VERZE,cas:new Date().toLocaleString('cs-CZ'),svet:'č. '+WORLD.seed+' ('+popisSveta(WORLD)+')',karta:TABY[tab][1]+(sel?', vybráno '+(sel.n||T[sel.t]&&T[sel.t].n||sel.k):'')+(guma?', guma':''),
+  stavba:`koleje ${tiles.size}, silnice ${roads.size}, domy ${bldg.size}, vláčky ${trains.length}, auta ${cars.length}`,
+  zvuk:(zvuk?'zapnutý':'vypnutý')+', AudioContext '+(AC?AC.state:'není')+(navigator.audioSession?', session '+navigator.audioSession.type:''),
+  zarizeni:`${innerWidth}×${innerHeight}${navigator.standalone?', na ploše':''}; ${navigator.userAgent.replace(/^Mozilla\/5\.0 /,'').slice(0,120)}`,
+  chyby_js:CHYBY_JS.length?CHYBY_JS.join(' | '):'žádné'}}
+let kontextPri=null;
+function odkazIssue(h){const telo=`${h.text}\n\n---\nKontext ze hry:\n`+Object.entries(h.kontext).map(([k,v])=>`- ${k}: ${v}`).join('\n');
+  const titul=`${h.typ==='napad'?'Nápad':'Chyba'}: ${h.text.split('\n')[0].slice(0,70)}`;
+  return `https://github.com/${REPO}/issues/new?title=${encodeURIComponent(titul)}&body=${encodeURIComponent(telo)}`}
+const esc=t=>String(t).replace(/[<&>"]/g,c=>({'<':'&lt;','&':'&amp;','>':'&gt;','"':'&quot;'}[c]));
+function panelRodice(ponech){
+  if(!ponech)kontextPri=kontextHry();const k=kontextPri,box=$('rbox');
+  const seznam=hlaseni.slice().reverse().map(h=>`<li class="hl-polozka"><span class="hl-typ">${h.typ==='napad'?'💡':'🐞'}</span><span class="hl-text">${esc(h.text)}<small>${esc(h.kontext.cas)} · ${esc(h.kontext.karta)}</small></span>
+    <a class="mini" href="${odkazIssue(h)}" target="_blank" rel="noopener" data-odeslat="${h.id}">${h.odeslano?'znovu':'odeslat'}</a><button type="button" class="mini x2" data-smaz="${h.id}" aria-label="Smazat">✕</button></li>`).join('');
+  box.innerHTML=`<h2>Pro rodiče <button class="x" id="rClose">✕</button></h2>
+    <p class="maly">Verze ${esc(VERZE)} · svět ${esc(k.svet)} · ${esc(k.stavba)}</p>
+    <h3>Hlášení chyb a nápadů</h3>
+    <p class="maly">Co nefunguje nebo co by šlo lépe? Hra připojí, kde právě jste (${esc(k.karta)}), stav zvuku a případné technické chyby.</p>
+    <div class="hl-typy"><label><input type="radio" name="hl-typ" value="chyba" checked> 🐞 chyba</label><label><input type="radio" name="hl-typ" value="napad"> 💡 nápad</label></div>
+    <textarea id="hl-text" rows="3" placeholder="Např.: vláček nejede přes výhybku, nebo: chtělo by to letiště"></textarea>
+    <div class="row" style="margin-top:8px"><button type="button" class="big ok" id="hl-uloz" style="margin-left:0">Uložit hlášení</button></div>
+    ${seznam?`<ul class="hl-seznam">${seznam}</ul><p class="maly">„Odeslat“ otevře GitHub (repozitář hry je veřejný) s vyplněným hlášením, stačí potvrdit. Uložená hlášení zůstávají i tady v iPadu.</p>`:''}`;
+  $('rClose').onclick=()=>$('rodice').classList.remove('on');
+  $('hl-uloz').onclick=()=>{const t=$('hl-text').value.trim();if(!t){$('hl-text').focus();return}
+    const typ=(box.querySelector('input[name="hl-typ"]:checked')||{}).value||'chyba';
+    hlaseni.push({id:Date.now().toString(36),typ,text:t,kontext:kontextPri||kontextHry(),odeslano:false});ulozHl();panelRodice(true)};
+  box.querySelectorAll('[data-smaz]').forEach(b=>b.onclick=()=>{hlaseni=hlaseni.filter(h=>h.id!==b.dataset.smaz);ulozHl();panelRodice(true)});
+  box.querySelectorAll('[data-odeslat]').forEach(a=>a.addEventListener('click',()=>{const h=hlaseni.find(x=>x.id===a.dataset.odeslat);if(h){h.odeslano=true;ulozHl();setTimeout(()=>panelRodice(true),300)}}));
+  $('rodice').classList.add('on');
+}
+$('rodice').addEventListener('pointerdown',e=>{if(e.target.id==='rodice')$('rodice').classList.remove('on')});
+(function(){const b=$('rodicBtn');let t=null;const stop=()=>{clearTimeout(t);b.classList.remove('drzim')};
+  b.addEventListener('pointerdown',e=>{e.preventDefault();b.classList.add('drzim');t=setTimeout(()=>{stop();panelRodice()},1000)});
+  ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,stop));
+  b.addEventListener('click',()=>{if(!$('rodice').classList.contains('on'))toast('Pro rodiče: podrž ⚙️ chvilku')});
+  b.addEventListener('contextmenu',e=>e.preventDefault());})();
 // ================= smyčka =================
 let last=performance.now();
 function frame(t){
