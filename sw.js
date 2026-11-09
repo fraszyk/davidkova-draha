@@ -1,6 +1,6 @@
 /* Uloží hru do iPadu, aby jako aplikace na ploše fungovala i bez internetu.
    Po nahrání nové verze (změň VERZE) se hra při dalším spuštění sama aktualizuje. */
-const VERZE = '70dd739a01';
+const VERZE = '01e31d8508';
 const CACHE = 'draha-' + VERZE;
 const SOUBORY = ["./","index.html","manifest.webmanifest","ikona-180.png","ikona-192.png","ikona-512.png"];
 

@@ -16,6 +16,8 @@ Většina je převzata hotová (oříznutá a sjednocená) z Davídkova městeč
 | kun | koník | BigSoundBank #0460 „Neighing of a horse“ – https://bigsoundbank.com/neighing-of-a-horse-s0460.html | Joseph SARDIN | CC0 1.0 |
 | kohout_kratky | kohoutek | BigSoundBank #0283 „Rooster Song“ – https://bigsoundbank.com/song-of-rooster-s0283.html | DenisChardonnet | CC0 1.0 |
 | pes_kratky | pejsek | BigSoundBank #0112 „Barking Dog Inside“ – https://bigsoundbank.com/barking-dog-inside-s0112.html | Joseph SARDIN | CC0 1.0 |
+| sirena | hasičské a policejní auto (ťuknutí) | BigSoundBank #1464 „2 Ton Siren“ – https://bigsoundbank.com/ambulance-siren-2-s1464.html | Joseph SARDIN | CC0 1.0 |
+| houkacka_kratky | autíčka a autobus (ťuknutí) | BigSoundBank #0258 „Recent Car Horn #2“ – https://bigsoundbank.com/recent-car-horn-2-s0258.html | DenisChardonnet | CC0 1.0 |
 
 Syntetizované (zatím bez nahrávky): cvaknutí dílu, šplouchnutí (vodárna, myčka), točna, „puf“ a „hop“.
 Hlas: věty namluvené hlasem macOS „Zuzana (Enhanced)“ (tools/build.py, složka hlasy/).
