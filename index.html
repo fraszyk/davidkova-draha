@@ -438,7 +438,18 @@ function stepCar(c,dt){
 }
 // ================= audio & hlas =================
 let zvuk=true,AC=null,NB=null;
-function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){AC=null}}if(AC&&AC.state==='suspended')AC.resume();return AC}
+function ac(){if(!AC){try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){AC=null}}if(AC&&AC.state!=='running'&&AC.state!=='closed')AC.resume();return AC}
+// iPad: zvuk se odemyká až při puštění prstu / ťuknutí (ne při položení), hraje i při ztlumení (audioSession 'playback')
+// a po přepnutí aplikací se musí odemknout znovu – proto posloucháme pořád, ne jen jednou (stejně jako Městečko).
+let odemceno=false;
+function odemkni(){
+  try{if(navigator.audioSession&&navigator.audioSession.type!=='playback')navigator.audioSession.type='playback'}catch(e){}
+  const a=ac();if(!a)return;
+  if(odemceno&&a.state==='running')return;
+  try{const b=a.createBuffer(1,1,22050),s=a.createBufferSource();s.buffer=b;s.connect(a.destination);s.start(0);if(a.state==='running')odemceno=true}catch(e){}
+}
+['pointerdown','pointerup','touchend','click','keydown'].forEach(ev=>document.addEventListener(ev,odemkni,{capture:true,passive:true}));
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)odemceno=false});
 function env(g,t,a,v,d){g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+a);g.gain.exponentialRampToValueAtTime(.0001,t+d)}
 function tone(f,d,type,v,w,f2){const a=zvuk&&ac();if(!a)return;const t=a.currentTime+(w||0),o=a.createOscillator(),g=a.createGain();o.type=type||'sine';o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);env(g,t,.008,v||.2,d);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+d+.05)}
 function noise(d,v,fq,w){const a=zvuk&&ac();if(!a)return;if(!NB){NB=a.createBuffer(1,a.sampleRate,a.sampleRate);const c=NB.getChannelData(0);for(let i=0;i<c.length;i++)c[i]=Math.random()*2-1}
