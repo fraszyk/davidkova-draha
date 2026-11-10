@@ -101,7 +101,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#a3d48c;font-family:va
 </div></div>
 <script>
 'use strict';
-const VERZE='87d69a46';
+const VERZE='168f8335';
 const CHYBY_JS=[];
 addEventListener('error',e=>{CHYBY_JS.push((e.message||'chyba')+' @'+(e.lineno||'?'));if(CHYBY_JS.length>5)CHYBY_JS.shift()});
 addEventListener('unhandledrejection',e=>{CHYBY_JS.push('promise: '+String(e.reason&&e.reason.message||e.reason));if(CHYBY_JS.length>5)CHYBY_JS.shift()});
@@ -1103,6 +1103,9 @@ function novySvet(seed,say){
 }
 // ================= pro rodiče: hlášení chyb a nápadů =================
 const REPO='fraszyk/davidkova-draha',HKEY='davidkova-draha-hlaseni';
+// adresa pro hlášení: doplní ji tools/build.py zakódovanou (obráceně + base64), aby ji roboti nesebrali tak snadno
+const EMAIL_KOD='=02bj5CZ19GbjlGQ5JHa5Z3brRWa2FGZ';
+const EMAIL=(()=>{try{return EMAIL_KOD.startsWith('/*')?'':decodeURIComponent(escape(atob(EMAIL_KOD.split('').reverse().join(''))))}catch(e){return ''}})();
 let hlaseni=[];try{hlaseni=JSON.parse(localStorage.getItem(HKEY)||'[]')}catch(e){}
 function ulozHl(){try{localStorage.setItem(HKEY,JSON.stringify(hlaseni.slice(-50)))}catch(e){}}
 function kontextHry(){return {verze:VERZE,cas:new Date().toLocaleString('cs-CZ'),svet:'č. '+WORLD.seed+' ('+popisSveta(WORLD)+')',karta:TABY[tab][1]+(sel?', vybráno '+(sel.n||T[sel.t]&&T[sel.t].n||sel.k):'')+(guma?', guma':''),
@@ -1111,6 +1114,11 @@ function kontextHry(){return {verze:VERZE,cas:new Date().toLocaleString('cs-CZ')
   zarizeni:`${innerWidth}×${innerHeight}${navigator.standalone?', na ploše':''}; ${navigator.userAgent.replace(/^Mozilla\/5\.0 /,'').slice(0,120)}`,
   chyby_js:CHYBY_JS.length?CHYBY_JS.join(' | '):'žádné'}}
 let kontextPri=null;
+function textHlaseni(h){return `${h.typ==='napad'?'Nápad':'Chyba'}: ${h.text}\n\n---\nKontext ze hry:\n`+Object.entries(h.kontext).map(([k,v])=>`- ${k}: ${v}`).join('\n')}
+function odkazMail(h){const titul=`Davídkova dráha – ${h.typ==='napad'?'nápad':'chyba'}: ${h.text.split('\n')[0].slice(0,60)}`;
+  return `mailto:${EMAIL}?subject=${encodeURIComponent(titul)}&body=${encodeURIComponent(textHlaseni(h))}`}
+function kopiruj(t){if(navigator.clipboard&&navigator.clipboard.writeText)return navigator.clipboard.writeText(t).then(()=>true,()=>kopirujStare(t));return Promise.resolve(kopirujStare(t))}
+function kopirujStare(t){try{const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0';document.body.appendChild(a);a.select();const ok=document.execCommand('copy');a.remove();return ok}catch(e){return false}}
 function odkazIssue(h){const telo=`${h.text}\n\n---\nKontext ze hry:\n`+Object.entries(h.kontext).map(([k,v])=>`- ${k}: ${v}`).join('\n');
   const titul=`${h.typ==='napad'?'Nápad':'Chyba'}: ${h.text.split('\n')[0].slice(0,70)}`;
   return `https://github.com/${REPO}/issues/new?title=${encodeURIComponent(titul)}&body=${encodeURIComponent(telo)}`}
@@ -1118,7 +1126,7 @@ const esc=t=>String(t).replace(/[<&>"]/g,c=>({'<':'&lt;','&':'&amp;','>':'&gt;',
 function panelRodice(ponech){
   if(!ponech)kontextPri=kontextHry();const k=kontextPri,box=$('rbox');
   const seznam=hlaseni.slice().reverse().map(h=>`<li class="hl-polozka"><span class="hl-typ">${h.typ==='napad'?'💡':'🐞'}</span><span class="hl-text">${esc(h.text)}<small>${esc(h.kontext.cas)} · ${esc(h.kontext.karta)}</small></span>
-    <a class="mini" href="${odkazIssue(h)}" target="_blank" rel="noopener" data-odeslat="${h.id}">${h.odeslano?'znovu':'odeslat'}</a><button type="button" class="mini x2" data-smaz="${h.id}" aria-label="Smazat">✕</button></li>`).join('');
+    ${EMAIL?`<a class="mini" href="${esc(odkazMail(h))}" data-odeslat="${h.id}">✉️ ${h.odeslano?'znovu':'poslat'}</a>`:''}<button type="button" class="mini" data-kopie="${h.id}">📋</button><a class="mini x2" href="${odkazIssue(h)}" target="_blank" rel="noopener" data-odeslat="${h.id}" title="GitHub (jen s účtem)">GH</a><button type="button" class="mini x2" data-smaz="${h.id}" aria-label="Smazat">✕</button></li>`).join('');
   box.innerHTML=`<h2>Pro rodiče <button class="x" id="rClose">✕</button></h2>
     <p class="maly">Verze ${esc(VERZE)} · svět ${esc(k.svet)} · ${esc(k.stavba)}</p>
     <h3>Hlášení chyb a nápadů</h3>
@@ -1126,11 +1134,12 @@ function panelRodice(ponech){
     <div class="hl-typy"><label><input type="radio" name="hl-typ" value="chyba" checked> 🐞 chyba</label><label><input type="radio" name="hl-typ" value="napad"> 💡 nápad</label></div>
     <textarea id="hl-text" rows="3" placeholder="Např.: vláček nejede přes výhybku, nebo: chtělo by to letiště"></textarea>
     <div class="row" style="margin-top:8px"><button type="button" class="big ok" id="hl-uloz" style="margin-left:0">Uložit hlášení</button></div>
-    ${seznam?`<ul class="hl-seznam">${seznam}</ul><p class="maly">„Odeslat“ otevře GitHub (repozitář hry je veřejný) s vyplněným hlášením, stačí potvrdit. Uložená hlášení zůstávají i tady v iPadu.</p>`:''}`;
+    ${seznam?`<ul class="hl-seznam">${seznam}</ul><p class="maly">${EMAIL?`✉️ otevře poštu s vyplněným hlášením na adresu <b>${esc(EMAIL)}</b>, stačí odeslat. Když pošta nenaskočí, dej 📋 a vlož hlášení do e-mailu na tu adresu.`:'📋 zkopíruje hlášení, vlož ho do zprávy autorovi hry.'} GH otevře GitHub, jen pro ty, kdo tam mají účet. Uložená hlášení zůstávají i v tomto zařízení.</p>`:''}`;
   $('rClose').onclick=()=>$('rodice').classList.remove('on');
   $('hl-uloz').onclick=()=>{const t=$('hl-text').value.trim();if(!t){$('hl-text').focus();return}
     const typ=(box.querySelector('input[name="hl-typ"]:checked')||{}).value||'chyba';
     hlaseni.push({id:Date.now().toString(36),typ,text:t,kontext:kontextPri||kontextHry(),odeslano:false});ulozHl();panelRodice(true)};
+  box.querySelectorAll('[data-kopie]').forEach(b=>b.onclick=()=>{const h=hlaseni.find(x=>x.id===b.dataset.kopie);if(!h)return;kopiruj(textHlaseni(h)).then(ok=>{toast(ok?'Hlášení je zkopírované 📋':'Kopírování nešlo');if(ok){h.odeslano=true;ulozHl()}})});
   box.querySelectorAll('[data-smaz]').forEach(b=>b.onclick=()=>{hlaseni=hlaseni.filter(h=>h.id!==b.dataset.smaz);ulozHl();panelRodice(true)});
   box.querySelectorAll('[data-odeslat]').forEach(a=>a.addEventListener('click',()=>{const h=hlaseni.find(x=>x.id===a.dataset.odeslat);if(h){h.odeslano=true;ulozHl();setTimeout(()=>panelRodice(true),300)}}));
   $('rodice').classList.add('on');
