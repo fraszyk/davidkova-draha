@@ -1,7 +1,7 @@
 # Zvuky – zdroje a licence
 
 Nahrávky ve složce `zvuky/` jsou vložené do hry (dist/Davidkova-draha.html, web/index.html). Licence byla ověřena na stránce každého souboru 9. 11. 2026.
-Všechny jsou **CC0 1.0 (public domain)**: použití bez omezení, autora uvádíme z úcty.
+Všechny jsou **CC0 1.0 nebo public domain**: použití bez omezení, autora uvádíme z úcty.
 Většina je převzata hotová (oříznutá a sjednocená) z Davídkova městečka (~/Documents/Chytre-hratky/mestecko/zvuky, viz tamní LICENCE.md).
 
 | id | použití ve hře | zdroj | autor | licence |
@@ -18,6 +18,8 @@ Většina je převzata hotová (oříznutá a sjednocená) z Davídkova městeč
 | pes_kratky | pejsek | BigSoundBank #0112 „Barking Dog Inside“ – https://bigsoundbank.com/barking-dog-inside-s0112.html | Joseph SARDIN | CC0 1.0 |
 | sirena | hasičské a policejní auto (ťuknutí) | BigSoundBank #1464 „2 Ton Siren“ – https://bigsoundbank.com/ambulance-siren-2-s1464.html | Joseph SARDIN | CC0 1.0 |
 | houkacka_kratky | autíčka a autobus (ťuknutí) | BigSoundBank #0258 „Recent Car Horn #2“ – https://bigsoundbank.com/recent-car-horn-2-s0258.html | DenisChardonnet | CC0 1.0 |
+| klap | pokládání kolejí a silnic | Wikimedia Commons „Knocking on wood or door.ogg“ – https://commons.wikimedia.org/wiki/File:Knocking_on_wood_or_door.ogg (zdroj PDSounds; vystřižen jeden úder 2,23–2,58 s, mono 22,05 kHz, normalizace, AAC 48 kb/s; zdroj v zvuky-zdroj/) | stephan | Public domain |
+| splouch | vodárna a myčka | Wikimedia Commons „Bathtub water splashes.ogg“ – https://commons.wikimedia.org/wiki/File:Bathtub_water_splashes.ogg (zdroj PDSounds; vystřiženo šplouchnutí 3,52–4,32 s, úpravy jako výše) | gradha | Public domain |
 
-Syntetizované (zatím bez nahrávky): cvaknutí dílu, šplouchnutí (vodárna, myčka), točna, „puf“ a „hop“.
+Syntetizované (bez nahrávky): točna, „puf“, „hop“, „pop“ a cvaknutí výhybky.
 Hlas: věty namluvené hlasem macOS „Zuzana (Enhanced)“ (tools/build.py, složka hlasy/).

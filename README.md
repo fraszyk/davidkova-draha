@@ -11,6 +11,6 @@ Ovládání:
 - **Vláčky, Auta:** ťukni a vyjedou. Ťuknutí na vláček nebo auto zahouká.
 - Dvěma prsty posouváš a přibližuješ mapu. 🧽 guma (táhni přes to, co chceš smazat), ↩️ zpět, 🎲 nový svět.
 
-Pro rodiče: podrž ⚙️ vlevo nahoře jednu vteřinu. V panelu jde uložit hlášení chyby nebo nápadu a odeslat ho jako issue do tohoto repozitáře (hra připojí kontext: svět, kartu, stav zvuku, technické chyby).
+Pro rodiče: podrž ⚙️ vlevo nahoře jednu vteřinu. Tam jde nahlásit chybu nebo nápad – odejde přes společný formulář Davídkových her na e-mail autora i s tím, kde ve hře jste (bez internetu počká a odešle se samo).
 
 Hlas: Zuzana (Enhanced), zvuky: CC0, viz LICENCE.md.
