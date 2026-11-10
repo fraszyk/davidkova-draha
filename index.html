@@ -18,7 +18,7 @@
 html,body{margin:0;height:100%;overflow:hidden;background:#a3d48c;font-family:var(--font);touch-action:none;overscroll-behavior:none}
 #cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
 #title{position:fixed;left:14px;top:calc(10px + env(safe-area-inset-top));background:rgba(255,255,255,.88);border-radius:22px;padding:2px 18px;font-weight:800;font-size:22px;color:#3d5f2a;box-shadow:0 3px 10px rgba(0,0,0,.12);pointer-events:none}
-#btns{position:fixed;right:12px;top:calc(10px + env(safe-area-inset-top));display:flex;flex-direction:column;flex-wrap:wrap-reverse;gap:10px;max-height:calc(100% - var(--tray) - 24px - env(safe-area-inset-bottom));align-content:flex-start}
+#btns{position:fixed;right:12px;top:calc(10px + env(safe-area-inset-top));display:flex;flex-direction:column;flex-wrap:wrap-reverse;gap:10px;max-height:calc(100% - var(--tray) - 64px - env(safe-area-inset-bottom));align-content:flex-start}
 .b{width:58px;height:58px;border-radius:50%;border:none;background:#fff;box-shadow:0 4px 0 rgba(0,0,0,.14),0 6px 14px rgba(0,0,0,.12);font-size:28px;font-family:var(--emoji);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;touch-action:manipulation;color:#333}
 .b:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.14)}
 #bGuma.on{background:#ff9b8c;animation:puls 1s infinite alternate}
@@ -86,6 +86,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#a3d48c;font-family:va
 .dh-stav{font-size:20px;font-weight:700;border:4px solid var(--ink,#5b3a17);border-radius:16px;padding:12px 14px;margin:0}
 
 #rbox{--ink:#5b3a17;--karta:#fff8ea;--trava:#ffd23f}
+:root{--of-dole:calc(var(--tray) + 12px)}
 @media (max-height:600px){:root{--tray:140px}.it{height:88px;width:80px}.it canvas{width:56px;height:56px}.it .em{font-size:40px;line-height:56px;height:56px}.b{width:48px;height:48px;font-size:23px}#title{font-size:18px}}
 </style></head>
 <body>
@@ -233,7 +234,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#a3d48c;font-family:va
 </script>
 <script>
 'use strict';
-const VERZE='f6d4388b';
+const VERZE='6e4ba642';
 const CHYBY_JS=[];
 addEventListener('error',e=>{CHYBY_JS.push((e.message||'chyba')+' @'+(e.lineno||'?'));if(CHYBY_JS.length>5)CHYBY_JS.shift()});
 addEventListener('unhandledrejection',e=>{CHYBY_JS.push('promise: '+String(e.reason&&e.reason.message||e.reason));if(CHYBY_JS.length>5)CHYBY_JS.shift()});
@@ -1338,5 +1339,51 @@ else{
   else setTimeout(()=>toast('Táhni prstem po trávě a stav koleje 👆'),400)}
 renderTabs();renderTray();updBtns();requestAnimationFrame(frame);
 </script>
-<script>if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});</script>
+<style>/* Davídkovy hry – štítek stavu offline vpravo dole (společný pro všechny hry).
+   Hra s lištou dole může štítek zvednout proměnnou --of-dole (výchozí 10px), např. :root{--of-dole:170px}. */
+#offline{position:fixed;right:calc(10px + env(safe-area-inset-right,0px));bottom:calc(var(--of-dole,10px) + env(safe-area-inset-bottom,0px));z-index:30;
+  font:700 14px/1.2 var(--font,system-ui);color:#26244A;background:#fff;border:3px solid #26244A;border-radius:999px;padding:5px 12px 4px;
+  box-shadow:3px 3px 0 #26244A;display:flex;align-items:center;gap:6px;max-width:min(320px,calc(100vw - 24px));cursor:pointer;user-select:none;-webkit-user-select:none}
+#offline .pruh{width:60px;height:8px;border-radius:4px;background:#E4DEFA;overflow:hidden;flex:none}
+#offline .pruh i{display:block;height:100%;width:0;background:#2FB574;transition:width .3s}
+#offline .vic{display:none;font-weight:500;font-size:13px}
+#offline.otevreny{border-radius:16px;flex-wrap:wrap}
+#offline.otevreny .vic{display:block;width:100%}
+#offline.of-ok{background:#D9F5E5}#offline.of-stahuje{background:#FFF6D6}#offline.of-chyba{background:#FFE7C2}
+</style>
+<script>/* Davídkovy hry – štítek stavu offline vpravo dole + registrace service workeru (společný pro všechny hry).
+   Použití (jednou, na konci stránky):  Offline.init({ kanal:'hratky-sw', velikost:'asi 67 MB', web:'https://fraszyk.github.io/chytre-hratky/' });
+   Service worker vzniká ze sw-sablona.js (stejný kanál). Stránka nemusí mít #offline v HTML, modul si ho vytvoří. */
+(function(G){
+ G.Offline={init(cfg){
+  const kanal=cfg.kanal,velikost=cfg.velikost||'',web=cfg.web||location.href.split('#')[0];
+  let box=document.getElementById('offline');
+  if(!box){box=document.createElement('div');box.id='offline';box.setAttribute('role','status');box.setAttribute('aria-live','polite');box.hidden=true;
+    box.innerHTML='<span class="txt"></span><span class="pruh" hidden><i></i></span><span class="vic"></span>';document.body.appendChild(box)}
+  const txt=box.querySelector('.txt'),pruh=box.querySelector('.pruh'),bar=pruh.querySelector('i'),vic=box.querySelector('.vic');
+  let stav='?';
+  function ukaz(s,t,v,proc){stav=s;box.hidden=false;box.className='of-'+s+(box.classList.contains('otevreny')?' otevreny':'');txt.textContent=t;vic.textContent=v;
+    pruh.hidden=proc==null;if(proc!=null)bar.style.width=Math.round(proc)+'%'}
+  box.onclick=()=>box.classList.toggle('otevreny');
+  if(!('serviceWorker' in navigator)||!window.isSecureContext||/^(blob|data|about|file):/.test(location.protocol)){ukaz('chyba','🌐 Jen online','Tady se hra nedá uložit pro offline. Otevřete ji z '+web);return}
+  const hotovo=()=>{if(!navigator.onLine)ukaz('ok','📴 Offline, vše funguje','Hra je uložená v tabletu, hraje se bez internetu.');else ukaz('ok','✅ Připraveno offline','Hra i všechny nahrávky jsou uložené v tabletu. Funguje i bez internetu.')};
+  const stahuje=(h,c)=>{const p=c?h/c*100:0;ukaz('stahuje',`⬇️ Stahuje se pro offline ${Math.round(p)} %`,'Nechte hru chvilku otevřenou, stahují se nahrávky a zvuky'+(velikost?' ('+velikost+')':'')+'. Hrát se dá už teď.',p)};
+  const nejde=()=>ukaz('chyba','⚠️ Zatím jen online','Stažení pro offline se nedokončilo. Zkusí se znovu při dalším spuštění s internetem.');
+  let bc=null;try{bc=new BroadcastChannel(kanal)}catch(e){}
+  if(bc)bc.onmessage=e=>{const d=e.data||{};
+    if(d.typ==='prubeh')stahuje(d.hotovo,d.celkem);
+    else if(d.typ==='hotovo')hotovo();
+    else if(d.typ==='chyba')nejde();
+    else if(d.typ==='stav'){if(d.hotovo>=d.celkem&&d.celkem>0)hotovo();else if(stav!=='stahuje')nejde()}};
+  ukaz('stahuje','⬇️ Připravuji offline…','',0);
+  navigator.serviceWorker.register('sw.js').then(reg=>{
+    const sleduj=w=>{if(!w)return;w.addEventListener('statechange',()=>{if(w.state==='redundant'&&stav==='stahuje')nejde()})};
+    sleduj(reg.installing);reg.addEventListener('updatefound',()=>sleduj(reg.installing));
+    if(!reg.installing&&!reg.waiting)navigator.serviceWorker.ready.then(()=>{if(bc)bc.postMessage({typ:'dotaz'});else hotovo()});
+  }).catch(nejde);
+  addEventListener('online',()=>{if(stav==='ok')hotovo()});addEventListener('offline',()=>{if(stav==='ok')hotovo()});
+ }};
+})(window);
+
+Offline.init({kanal:'draha-sw',velikost:'asi 2 MB',web:'https://fraszyk.github.io/davidkova-draha/'});</script>
 </body></html>
